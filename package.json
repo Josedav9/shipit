@@ -1,0 +1,27 @@
+{
+  "name": "shipit",
+  "version": "1.0.0",
+  "description": "Slack github bot",
+  "main": "index.ts",
+  "scripts": {
+    "start": "ts-node index.ts",
+    "start:server": "ts-node ./express/server.ts",
+    "test": "ts-node index.ts"
+  },
+  "keywords": [
+    "slack",
+    "bot",
+    "ts"
+  ],
+  "author": "Jose Alvarez",
+  "license": "MIT",
+  "dependencies": {
+    "@slack/bolt": "^3.10.0",
+    "body-parser": "^1.19.2",
+    "dotenv": "^16.0.0",
+    "express": "^4.17.3",
+    "pino": "^7.9.2",
+    "ts-node": "^10.7.0",
+    "typescipt": "^1.0.0"
+  }
+}
