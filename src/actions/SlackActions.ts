@@ -30,7 +30,17 @@ export class SlackActions {
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: `:warning: ${convertToLink(pr.title, pr.url)}`,
+                text: `:warning: *${convertToLink(pr.title, pr.url)}*`,
+              },
+              accessory: {
+                type: "button",
+                text: {
+                  type: "plain_text",
+                  emoji: true,
+                  text: ":thumbsup: Validate",
+                },
+                style: "primary",
+                value: pr.url,
               },
             };
           });
@@ -40,14 +50,16 @@ export class SlackActions {
                 type: "section",
                 text: {
                   type: "mrkdwn",
-                  text: "*Pendding PRs :poop:*",
+                  text: "*Pendding PRs :poop:*\n To validate use the coressponding button",
                 },
               },
               ...messagePullRequest,
             ],
           });
         } else {
-          await say(`You don't have any Pull request open`);
+          await say(
+            `You don't have any Pull request that need validation at the moment :thumbsup:`
+          );
         }
       } catch (error: any) {
         throw new Error(error);
