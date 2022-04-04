@@ -1,7 +1,7 @@
 version: "3"
 services:
   db:
-    image: mongo
+    image: mongo2
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
