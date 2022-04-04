@@ -1,0 +1,21 @@
+version: "3"
+services:
+  db:
+    image: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    ports:
+      - 2717:27017
+    volumes:
+      - data:/var/lib/mongodb-bot/data
+  app:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 3000:3000
+
+
+volumes: 
+  data:

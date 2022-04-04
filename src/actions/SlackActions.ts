@@ -26,11 +26,14 @@ export class SlackActions {
         const PRs = await this.github.getPRs("shipit");
         if (PRs.data.length && PRs.data.length > 0) {
           const messagePullRequest = PRs.data.map((pr) => {
+            const number = pr.url.split('/')[7]
+            const repoName = pr.url.split('/')[5]
+            const message = `${repoName} #${number} ${pr.title}`
             return {
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: `:warning: *${convertToLink(pr.title, pr.url)}*`,
+                text: `:warning: *${convertToLink(message, pr.html_url)}*`,
               },
               accessory: {
                 type: "button",
