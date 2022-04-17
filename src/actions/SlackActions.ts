@@ -1,6 +1,7 @@
 import { App, GenericMessageEvent } from "@slack/bolt";
 import { GithubIntegration } from "../integration/github";
-import { convertToLink } from "../helpers";
+import { formatMessageForPullRequest } from "../helpers";
+import { User } from "../model/user.model";
 const logger = require("pino")({ name: "ShipitBot slack" });
 
 export class SlackActions {
@@ -26,26 +27,7 @@ export class SlackActions {
         const PRs = await this.github.getPRs("shipit");
         if (PRs.data.length && PRs.data.length > 0) {
           const messagePullRequest = PRs.data.map((pr) => {
-            const number = pr.url.split('/')[7]
-            const repoName = pr.url.split('/')[5]
-            const message = `${repoName} #${number} ${pr.title}`
-            return {
-              type: "section",
-              text: {
-                type: "mrkdwn",
-                text: `:warning: *${convertToLink(message, pr.html_url)}*`,
-              },
-              accessory: {
-                type: "button",
-                text: {
-                  type: "plain_text",
-                  emoji: true,
-                  text: ":thumbsup: Validate",
-                },
-                style: "primary",
-                value: pr.url,
-              },
-            };
+            return formatMessageForPullRequest(pr);
           });
           await say({
             blocks: [
@@ -66,6 +48,87 @@ export class SlackActions {
         }
       } catch (error: any) {
         throw new Error(error);
+      }
+    });
+
+    this.app.message("register", async ({ context, message, say }) => {
+      logger.info("Shipit register access");
+      try {
+        const incommingMessage = message as GenericMessageEvent;
+        const [_, newGithubUser] = incommingMessage.text!.split(" ");
+
+        if (!newGithubUser) {
+          throw new Error(`Please provide a github user :thumbsup:`);
+        }
+
+        const userInfo = await this.app.client.users.info({
+          token: context.botToken!,
+          user: incommingMessage.user,
+        });
+
+        const githubUser = await User.findOne({
+          slackUserId: userInfo.user!.id,
+        });
+
+        if (githubUser) {
+          await say(
+            `You already have a github user register is ${githubUser.githubUser} :thumbsup:`
+          );
+        } else {
+          const newRegister = new User({
+            githubUser: newGithubUser,
+            slackUserId: userInfo.user!.id,
+          });
+          await newRegister.save();
+          await say(
+            `Your user was register with ${newRegister.githubUser} github account :partying_face:`
+          );
+        }
+      } catch (error: any) {
+        await say(error.message);
+      }
+    });
+
+    this.app.message("validate", async ({ context, message, say }) => {
+      logger.info("Shipit validate access");
+      try {
+        const incommingMessage = message as GenericMessageEvent;
+        const [_, respository, pullRequest] = incommingMessage.text!.split(" ");
+
+        if (!respository || !pullRequest) {
+          throw new Error(`Please provide a repository and a PR number`);
+        }
+
+        const pullRequestNumber = parseInt(pullRequest, 10);
+
+        const data = await this.github.checkPullRequest(
+          respository,
+          pullRequestNumber
+        );
+        // TODO JIRA: AS-48: Add logic to check on db for created PRS need github action before.
+      } catch (error: any) {
+        await say(error.message);
+      }
+    });
+
+    this.app.message("deploy", async ({ message, say }) => {
+      try {
+        const incommingMessage = message as GenericMessageEvent;
+        const [_, respository, tagName] = incommingMessage.text!.split(" ");
+        if (!respository) {
+          throw new Error(`Please provide a repository to be deployed!!`);
+        }
+
+        // TODO: Check back once issue with merging api is solved
+        /* const pr = await this.github.createPullRequestToMain(respository);
+        const prNumber = pr.data.number;
+        // Issues with github api check https://stackoverflow.com/questions/69489708/github-merging-api-returns-404-not-found
+        const data = await this.github.mergePullRequest(respository, prNumber); */
+
+        const {data} = await this.github.createRelease(respository, tagName);
+        await say(`Your release has been created with the tag ${data.tag_name}`)
+      } catch (error: any) {
+        await say(error.message);
       }
     });
 
