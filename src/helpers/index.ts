@@ -1,2 +1,2 @@
-import { convertToLink } from "./Slackmrkdwn.util";
-export { convertToLink };
+import { convertToLink, formatMessageForPullRequest } from "./SlackMessager.util";
+export { convertToLink, formatMessageForPullRequest };
