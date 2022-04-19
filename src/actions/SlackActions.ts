@@ -2,6 +2,7 @@ import { App, GenericMessageEvent } from "@slack/bolt";
 import { GithubIntegration } from "../integration/github";
 import { formatMessageForPullRequest } from "../helpers";
 import { User } from "../model/user.model";
+import { PullRequest } from "../model/pullrequest.model";
 const logger = require("pino")({ name: "ShipitBot slack" });
 
 export class SlackActions {
@@ -101,11 +102,25 @@ export class SlackActions {
 
         const pullRequestNumber = parseInt(pullRequest, 10);
 
-        const data = await this.github.checkPullRequest(
+        const {data} = await this.github.checkPullRequest(
           respository,
           pullRequestNumber
         );
         // TODO JIRA: AS-48: Add logic to check on db for created PRS need github action before.
+        const newPr = new PullRequest({
+          title: data.title,
+          author: data.user.login,
+          url: data.url,
+          validated: true,
+          repository: data.repo.name,
+          number: data.number,
+        })
+
+        await newPr.save()
+        await say(
+          `:white_check_mark: Your PR ${newPr.title} #${newPr.number} has been validated :partying_face:`
+        );
+        
       } catch (error: any) {
         await say(error.message);
       }
