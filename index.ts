@@ -1,6 +1,7 @@
 import { App } from "@slack/bolt";
 import { SlackActions } from "./src";
 import { config } from "dotenv";
+import { MongooseBootstrap } from "./src/config/mongoose";
 
 const logger = require("pino")();
 config();
@@ -16,7 +17,12 @@ const app = new App({
 new SlackActions(app).activate();
 
 async function main() {
-  await app.start();
+  try {
+    await new MongooseBootstrap().connect();
+    await app.start();
+  } catch (err) {
+    console.log(err);
+  }
   logger.info("Shipit is ready!");
 }
 
