@@ -1,4 +1,4 @@
-# Slack bot with github integration
+# Slack bot with github integration lol
 
 
 ## Env variables
