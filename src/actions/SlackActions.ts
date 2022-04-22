@@ -28,18 +28,18 @@ export class SlackActions {
           user: incommingMessage.user,
         });
 
-        const githubUser = await User.findOne({
+        const user = await User.findOne({
           slackUserId: userInfo.user!.id,
         });
 
-        if (!githubUser) {
+        if (!user) {
           throw new Error(
             `Your slack user doesn't have a github user associated please run ´register <github user>´`
           );
         }
         const getPrs = await PullRequest.find<PullRequestModel>({
           validated: false,
-          author: githubUser,
+          author: user.githubUser,
         });
         if (getPrs.length && getPrs.length > 0) {
           const messagePullRequest = getPrs.map((pr) => {
