@@ -2,6 +2,7 @@ import { App, GenericMessageEvent } from "@slack/bolt";
 import { GithubIntegration } from "../integration/github";
 import { formatMessageForPullRequest } from "../helpers";
 import { User } from "../model/user.model";
+import { PullRequestModel } from "@/integration/DTOs/index";
 import { PullRequest } from "../model/pullrequest.model";
 const logger = require("pino")({ name: "ShipitBot slack" });
 
@@ -19,15 +20,29 @@ export class SlackActions {
 
     this.app.message("prs", async ({ context, message, say }) => {
       logger.info("Shipit greetings access");
-      const userInfo = await this.app.client.users.info({
-        token: context.botToken!,
-        user: (message as GenericMessageEvent).user,
-      });
+      const incommingMessage = message as GenericMessageEvent;
 
       try {
-        const PRs = await this.github.getPRs("shipit");
-        if (PRs.data.length && PRs.data.length > 0) {
-          const messagePullRequest = PRs.data.map((pr) => {
+        const userInfo = await this.app.client.users.info({
+          token: context.botToken!,
+          user: incommingMessage.user,
+        });
+
+        const user = await User.findOne({
+          slackUserId: userInfo.user!.id,
+        });
+
+        if (!user) {
+          throw new Error(
+            `Your slack user doesn't have a github user associated please run ´register <github user>´`
+          );
+        }
+        const getPrs = await PullRequest.find<PullRequestModel>({
+          validated: false,
+          author: user.githubUser,
+        });
+        if (getPrs.length && getPrs.length > 0) {
+          const messagePullRequest = getPrs.map((pr) => {
             return formatMessageForPullRequest(pr);
           });
           await say({
@@ -43,12 +58,12 @@ export class SlackActions {
             ],
           });
         } else {
-          await say(
+          throw new Error(
             `You don't have any Pull request that need validation at the moment :thumbsup:`
           );
         }
       } catch (error: any) {
-        throw new Error(error);
+        await say(error.message);
       }
     });
 
@@ -100,27 +115,42 @@ export class SlackActions {
           throw new Error(`Please provide a repository and a PR number`);
         }
 
+        const userInfo = await this.app.client.users.info({
+          token: context.botToken!,
+          user: incommingMessage.user,
+        });
+
+        const user = await User.findOne({
+          slackUserId: userInfo.user!.id,
+        });
+
+        if (!user) {
+          throw new Error(
+            "Your slack user doesn't have a github user associated please run ´register <github user>´"
+          );
+        }
+
         const pullRequestNumber = parseInt(pullRequest, 10);
 
-        const {data} = await this.github.checkPullRequest(
-          respository,
-          pullRequestNumber
-        );
-        // TODO JIRA: AS-48: Add logic to check on db for created PRS need github action before.
-        const newPr = new PullRequest({
-          title: data.title,
-          author: data.user.login,
-          url: data.url,
-          validated: true,
-          repository: data.repo.name,
-          number: data.number,
-        })
+        const validatedPr =
+          await PullRequest.findOneAndUpdate<PullRequestModel>(
+            {
+              author: user.githubUser,
+              repository: respository,
+              number: pullRequestNumber,
+            },
+            { validated: true }
+          );
 
-        await newPr.save()
+        if (!validatedPr) {
+          throw new Error(
+            ":poop: We could not find your PR please check the information is correct an try again :thumbsup:"
+          );
+        }
+
         await say(
-          `:white_check_mark: Your PR ${newPr.title} #${newPr.number} has been validated :partying_face:`
+          `:white_check_mark: Your PR ${validatedPr.title} #${validatedPr.number} has been validated :partying_face:`
         );
-        
       } catch (error: any) {
         await say(error.message);
       }
@@ -129,8 +159,8 @@ export class SlackActions {
     this.app.message("deploy", async ({ message, say }) => {
       try {
         const incommingMessage = message as GenericMessageEvent;
-        const [_, respository, tagName] = incommingMessage.text!.split(" ");
-        if (!respository) {
+        const [_, repository, tagName] = incommingMessage.text!.split(" ");
+        if (!repository) {
           throw new Error(`Please provide a repository to be deployed!!`);
         }
 
@@ -140,8 +170,51 @@ export class SlackActions {
         // Issues with github api check https://stackoverflow.com/questions/69489708/github-merging-api-returns-404-not-found
         const data = await this.github.mergePullRequest(respository, prNumber); */
 
-        const {data} = await this.github.createRelease(respository, tagName);
-        await say(`Your release has been created with the tag ${data.tag_name}`)
+        const prsToBeDeployed = await PullRequest.find<PullRequestModel>({
+          prod: false,
+          repository,
+        });
+        if (!prsToBeDeployed.length) {
+          throw new Error("*Looks like there are no new changes to be deploy*");
+        }
+
+        const PrsNotValidated = prsToBeDeployed
+          .filter((pr) => pr.validated === false)
+          .map((pr) => pr._id);
+
+        const messagePullRequest = prsToBeDeployed.map((pr) => {
+          return formatMessageForPullRequest(pr);
+        });
+
+        await say({
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: "*PRs for this deployment :rocket:*\n We send a notification to all PRs that need validation",
+              },
+            },
+            ...messagePullRequest,
+          ],
+        });
+
+        if (PrsNotValidated.length) {
+          throw new Error(
+            "There are PRs that need to be validated before. We send a notification to all those users"
+          );
+        }
+
+        const { data } = await this.github.createRelease(repository, tagName);
+
+        await PullRequest.updateMany(
+          { repository },
+          { prod: true }
+        );
+
+        await say(
+          `Your release has been created with the tag ${data.tag_name}`
+        );
       } catch (error: any) {
         await say(error.message);
       }

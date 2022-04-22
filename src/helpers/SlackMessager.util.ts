@@ -1,28 +1,20 @@
-import { PullRequestDTO } from "@/integration/DTOs";
+import { PullRequestModel } from "@/integration/DTOs";
 
 export const convertToLink = (title: string, url: string) => {
   return `<${url}|${title}>`;
 };
 
-export const formatMessageForPullRequest = (pr: PullRequestDTO) => {
+export const formatMessageForPullRequest = (pr: PullRequestModel) => {
   const number = pr.number;
-  const repoName = pr.repo.name;
+  const repoName = pr.repository;
   const message = `${repoName} #${number} ${pr.title}`;
   return {
     type: "section",
     text: {
       type: "mrkdwn",
-      text: `:warning: *${convertToLink(message, pr.html_url)}*`,
-    },
-    accessory: {
-      type: "button",
-      text: {
-        type: "plain_text",
-        emoji: true,
-        text: ":thumbsup: Validate",
-      },
-      style: "primary",
-      value: pr.url,
+      text: `${
+        pr.validated ? ":white_check_mark:" : ":warning:"
+      } *${convertToLink(message, pr.url)}*`,
     },
   };
 };
