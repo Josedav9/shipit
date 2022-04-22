@@ -19,6 +19,7 @@ export interface PullRequestDTO {
 }
 
 export interface PullRequestModel {
+  _id: string,
   title: string;
   author: string;
   url: string;
