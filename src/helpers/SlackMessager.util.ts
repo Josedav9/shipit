@@ -12,17 +12,9 @@ export const formatMessageForPullRequest = (pr: PullRequestModel) => {
     type: "section",
     text: {
       type: "mrkdwn",
-      text: `:warning: *${convertToLink(message, pr.url)}*`,
-    },
-    accessory: {
-      type: "button",
-      text: {
-        type: "plain_text",
-        emoji: true,
-        text: ":thumbsup: Validate",
-      },
-      style: "primary",
-      value: pr.url,
+      text: `${
+        pr.validated ? ":white_check_mark:" : ":warning:"
+      } *${convertToLink(message, pr.url)}*`,
     },
   };
 };
