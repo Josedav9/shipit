@@ -1,5 +1,3 @@
-import { PullRequestDTO } from "./GithubPullRequestDTO";
+import { PullRequestDTO, PullRequestModel } from "./GithubPullRequestDTO";
 
-export {
-  PullRequestDTO
-}
+export { PullRequestDTO, PullRequestModel };
