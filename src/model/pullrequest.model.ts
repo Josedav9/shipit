@@ -9,6 +9,7 @@ const pullRequest = new Schema({
   validated: { type: Boolean, default: false },
   repository: String,
   number: Number,
+  prod: { type: Boolean, default: false }
 });
 
 export const PullRequest = mongoose.model("PullRequest", pullRequest);

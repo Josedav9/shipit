@@ -19,7 +19,7 @@ export class GithubIntegration {
   }
 
   checkPullRequest(repository: string, pullNumber: number) {
-    return axios.get(
+    return axios.get<PullRequestDTO>(
       `${this.url}/repos/${this.owner}/${repository}/pulls/${pullNumber}`,
       {
         headers: {
