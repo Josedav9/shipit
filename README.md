@@ -1,4 +1,4 @@
-# Slack bot with github integration xD
+# Slack bot with github integration
 
 
 
