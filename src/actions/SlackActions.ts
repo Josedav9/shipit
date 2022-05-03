@@ -17,13 +17,13 @@ export class SlackActions {
   activate() {
     logger.info("ShipitBot module is now active.");
 
-    this.app.message("prs", this.githubController.listPrs.bind(this.githubController));
+    this.app.message("prs", (event) => this.githubController.listPrs(event));
 
-    this.app.message("register", this.githubController.registerEvent.bind(this.githubController));
+    this.app.message("register", (event) => this.githubController.registerEvent(event));
 
-    this.app.message("validate", this.githubController.validate.bind(this.githubController));
+    this.app.message("validate", (event) => this.githubController.validate(event));
 
-    this.app.message("deploy", this.githubController.deploy.bind(this.githubController));
+    this.app.message("deploy", (event) => this.githubController.deploy(event));
 
     // Listens to incoming messages that contain "hello"
     this.app.message("hello", async ({ message, say }) => {
