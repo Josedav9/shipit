@@ -4,7 +4,7 @@
   "description": "Slack github bot",
   "main": "index.ts",
   "scripts": {
-    "start": "ts-node index.ts",
+    "start": "ts-node index.ts && ts-node ./express/server.ts",
     "start:server": "nodemon --watch './**/*.ts' --exec 'ts-node' ./express/server.ts",
     "test": "ts-node index.ts",
     "start:dev": "nodemon --watch './**/*.ts' --exec 'ts-node' index.ts"

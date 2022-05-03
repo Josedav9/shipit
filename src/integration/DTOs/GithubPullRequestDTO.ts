@@ -29,3 +29,8 @@ export interface PullRequestModel {
   number: number;
   prod: boolean;
 }
+
+export interface UserModel {
+  githubUser: string,
+  slackUserId: string,
+}
