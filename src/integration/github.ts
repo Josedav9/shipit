@@ -71,7 +71,7 @@ export class GithubIntegration {
     return axios.post(
       `${this.url}/repos/${this.owner}/${respository}/releases
     `,
-      { tag_name },
+      { tag_name, generate_release_notes: true },
       {
         headers: {
           Authorization: `token ${process.env.GITHUB_ACCESS_TOKEN}`,

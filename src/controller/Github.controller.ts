@@ -11,8 +11,12 @@ import { GithubIntegration } from "../integration/github";
 import {
   findUserBySlackId,
   createNewUser,
+  findUsersByGithubId,
 } from "../repository/user.respository";
-import { unValidatedPrsByAuthor, updatePRValidated } from "../repository/pullRequest.respository";
+import {
+  unValidatedPrsByAuthor,
+  updatePRValidated,
+} from "../repository/pullRequest.respository";
 
 export class GithubController {
   app: App;
@@ -136,7 +140,11 @@ export class GithubController {
 
       const pullRequestNumber = parseInt(pullRequest, 10);
 
-      const validatedPr = await updatePRValidated(user.githubUser, respository, pullRequestNumber)
+      const validatedPr = await updatePRValidated(
+        user.githubUser,
+        respository,
+        pullRequestNumber
+      );
 
       if (!validatedPr) {
         throw new Error(
@@ -180,7 +188,7 @@ export class GithubController {
 
       const PrsNotValidated = prsToBeDeployed
         .filter((pr) => pr.validated === false)
-        .map((pr) => pr._id);
+        .map((pr) => ({ id: pr._id, author: pr.author }));
 
       const messagePullRequest = prsToBeDeployed.map((pr) => {
         return formatMessageForPullRequest(pr);
@@ -200,6 +208,24 @@ export class GithubController {
       });
 
       if (PrsNotValidated.length) {
+        const githubAuthors = PrsNotValidated.map((pr) => pr.author);
+        const users = await findUsersByGithubId(githubAuthors);
+        const pinMessages = users.map((user) =>
+          /* say(`Hey there <@${user.slackUserId}>! we need you validation on some of the PRs above`) */
+          this.app.client.chat.postMessage({
+            channel: user.slackUserId,
+            blocks: [
+              {
+                type: "section",
+                text: {
+                  type: "mrkdwn",
+                  text: "*There is someone prepping a deployment :rocket:*\n You have pendding Prs Please run `prs` to check the prs that need validation from you",
+                },
+              },
+            ],
+          })
+        );
+        await Promise.all(pinMessages);
         throw new Error(
           "There are PRs that need to be validated before. We send a notification to all those users"
         );
