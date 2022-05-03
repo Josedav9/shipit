@@ -3,10 +3,11 @@ services:
   db:
     image: mongo
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGODB_DATABASE}
     ports:
-      - 2717:27017
+      - ${MONGODB_PORT}:27017
     volumes:
       - data:/var/lib/mongodb-bot/data
   app:
@@ -15,6 +16,7 @@ services:
       dockerfile: ./Dockerfile
     ports:
       - 3000:3000
+      - 3001:3001
 
 
 volumes: 
