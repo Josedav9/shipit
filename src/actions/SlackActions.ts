@@ -1,224 +1,29 @@
 import { App, GenericMessageEvent } from "@slack/bolt";
 import { GithubIntegration } from "../integration/github";
-import { formatMessageForPullRequest } from "../helpers";
-import { User } from "../model/user.model";
-import { PullRequestModel } from "@/integration/DTOs/index";
-import { PullRequest } from "../model/pullrequest.model";
+import { GithubController } from "../controller/Github.controller";
 const logger = require("pino")({ name: "ShipitBot slack" });
 
 export class SlackActions {
   app: App;
   github: GithubIntegration;
+  githubController: GithubController;
 
   constructor(app: App) {
     this.app = app;
     this.github = new GithubIntegration({ owner: "Josedav9" });
+    this.githubController = new GithubController(this.app, this.github);
   }
 
   activate() {
     logger.info("ShipitBot module is now active.");
 
-    this.app.message("prs", async ({ context, message, say }) => {
-      logger.info("Shipit greetings access");
-      const incommingMessage = message as GenericMessageEvent;
+    this.app.message("prs", this.githubController.listPrs.bind(this.githubController));
 
-      try {
-        const userInfo = await this.app.client.users.info({
-          token: context.botToken!,
-          user: incommingMessage.user,
-        });
+    this.app.message("register", this.githubController.registerEvent.bind(this.githubController));
 
-        const user = await User.findOne({
-          slackUserId: userInfo.user!.id,
-        });
+    this.app.message("validate", this.githubController.validate.bind(this.githubController));
 
-        if (!user) {
-          throw new Error(
-            `Your slack user doesn't have a github user associated please run ´register <github user>´`
-          );
-        }
-        const getPrs = await PullRequest.find<PullRequestModel>({
-          validated: false,
-          author: user.githubUser,
-        });
-        if (getPrs.length && getPrs.length > 0) {
-          const messagePullRequest = getPrs.map((pr) => {
-            return formatMessageForPullRequest(pr);
-          });
-          await say({
-            blocks: [
-              {
-                type: "section",
-                text: {
-                  type: "mrkdwn",
-                  text: "*Pendding PRs :poop:*\n To validate use the coressponding button",
-                },
-              },
-              ...messagePullRequest,
-            ],
-          });
-        } else {
-          throw new Error(
-            `You don't have any Pull request that need validation at the moment :thumbsup:`
-          );
-        }
-      } catch (error: any) {
-        await say(error.message);
-      }
-    });
-
-    this.app.message("register", async ({ context, message, say }) => {
-      logger.info("Shipit register access");
-      try {
-        const incommingMessage = message as GenericMessageEvent;
-        const [_, newGithubUser] = incommingMessage.text!.split(" ");
-
-        if (!newGithubUser) {
-          throw new Error(`Please provide a github user :thumbsup:`);
-        }
-
-        const userInfo = await this.app.client.users.info({
-          token: context.botToken!,
-          user: incommingMessage.user,
-        });
-
-        const githubUser = await User.findOne({
-          slackUserId: userInfo.user!.id,
-        });
-
-        if (githubUser) {
-          await say(
-            `You already have a github user register is ${githubUser.githubUser} :thumbsup:`
-          );
-        } else {
-          const newRegister = new User({
-            githubUser: newGithubUser,
-            slackUserId: userInfo.user!.id,
-          });
-          await newRegister.save();
-          await say(
-            `Your user was register with ${newRegister.githubUser} github account :partying_face:`
-          );
-        }
-      } catch (error: any) {
-        await say(error.message);
-      }
-    });
-
-    this.app.message("validate", async ({ context, message, say }) => {
-      logger.info("Shipit validate access");
-      try {
-        const incommingMessage = message as GenericMessageEvent;
-        const [_, respository, pullRequest] = incommingMessage.text!.split(" ");
-
-        if (!respository || !pullRequest) {
-          throw new Error(`Please provide a repository and a PR number`);
-        }
-
-        const userInfo = await this.app.client.users.info({
-          token: context.botToken!,
-          user: incommingMessage.user,
-        });
-
-        const user = await User.findOne({
-          slackUserId: userInfo.user!.id,
-        });
-
-        if (!user) {
-          throw new Error(
-            "Your slack user doesn't have a github user associated please run ´register <github user>´"
-          );
-        }
-
-        const pullRequestNumber = parseInt(pullRequest, 10);
-
-        const validatedPr =
-          await PullRequest.findOneAndUpdate<PullRequestModel>(
-            {
-              author: user.githubUser,
-              repository: respository,
-              number: pullRequestNumber,
-            },
-            { validated: true }
-          );
-
-        if (!validatedPr) {
-          throw new Error(
-            ":poop: We could not find your PR please check the information is correct an try again :thumbsup:"
-          );
-        }
-
-        await say(
-          `:white_check_mark: Your PR ${validatedPr.title} #${validatedPr.number} has been validated :partying_face:`
-        );
-      } catch (error: any) {
-        await say(error.message);
-      }
-    });
-
-    this.app.message("deploy", async ({ message, say }) => {
-      try {
-        const incommingMessage = message as GenericMessageEvent;
-        const [_, repository, tagName] = incommingMessage.text!.split(" ");
-        if (!repository) {
-          throw new Error(`Please provide a repository to be deployed!!`);
-        }
-
-        // TODO: Check back once issue with merging api is solved
-        /* const pr = await this.github.createPullRequestToMain(respository);
-        const prNumber = pr.data.number;
-        // Issues with github api check https://stackoverflow.com/questions/69489708/github-merging-api-returns-404-not-found
-        const data = await this.github.mergePullRequest(respository, prNumber); */
-
-        const prsToBeDeployed = await PullRequest.find<PullRequestModel>({
-          prod: false,
-          repository,
-        });
-        if (!prsToBeDeployed.length) {
-          throw new Error("*Looks like there are no new changes to be deploy*");
-        }
-
-        const PrsNotValidated = prsToBeDeployed
-          .filter((pr) => pr.validated === false)
-          .map((pr) => pr._id);
-
-        const messagePullRequest = prsToBeDeployed.map((pr) => {
-          return formatMessageForPullRequest(pr);
-        });
-
-        await say({
-          blocks: [
-            {
-              type: "section",
-              text: {
-                type: "mrkdwn",
-                text: "*PRs for this deployment :rocket:*\n We send a notification to all PRs that need validation",
-              },
-            },
-            ...messagePullRequest,
-          ],
-        });
-
-        if (PrsNotValidated.length) {
-          throw new Error(
-            "There are PRs that need to be validated before. We send a notification to all those users"
-          );
-        }
-
-        const { data } = await this.github.createRelease(repository, tagName);
-
-        await PullRequest.updateMany(
-          { repository },
-          { prod: true }
-        );
-
-        await say(
-          `Your release has been created with the tag ${data.tag_name}`
-        );
-      } catch (error: any) {
-        await say(error.message);
-      }
-    });
+    this.app.message("deploy", this.githubController.deploy.bind(this.githubController));
 
     // Listens to incoming messages that contain "hello"
     this.app.message("hello", async ({ message, say }) => {
