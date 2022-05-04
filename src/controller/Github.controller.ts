@@ -219,7 +219,7 @@ export class GithubController {
                 type: "section",
                 text: {
                   type: "mrkdwn",
-                  text: "*There is someone prepping a deployment :rocket:*\n You have pendding Prs Please run `prs` to check the prs that need validation from you",
+                  text: "*There is someone prepping a deployment :rocket:*\n You have pendding Prs Please run `prs` to check the prs that are deploy on sandbox and validate them",
                 },
               },
             ],
