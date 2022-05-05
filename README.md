@@ -2,10 +2,10 @@
 
 Slack bot with github integrations is a slack bot that allow organizations to handle deployments and validate functionality before deploy to prodution enviroments.
 
-
 NOTE: There are no test for this app. It onlñy requires a production enviroment
 
 ## Env variables needed
+
 ```
 SLACK_BOT_TOKEN=xoxb-xxxxxxx-xxxxxxxxx-xxxxxxxx
 SLACK_SIGNING_SECRET=ffafafafafafafafaf
@@ -19,18 +19,35 @@ MONGODB_USERNAME=root
 MONGODB_PASSWORD=newPassword
 MONGODB_DATABASE=slack-bot-dev
 ```
-### start
 
-Start the project in development mode
+### start
+Before you can run the app make sure you have a mongodb instance if you do not have one you can use 
+
+```bash
+docker compose up db -d
+```
+
+Start the project in development mode you can run
 
 ```bash
 npm start
 ```
 
-## Docker
+If you just want to run the bot without the webhook reciever run
 
-To deploy this app run
 ```bash
-    docker compose up -d
+npm run start:dev
 ```
 
+To run just the webhook recever run 
+```bash
+npm run server:dev
+```
+
+
+## Docker
+To deploy this app run
+
+```bash
+docker compose up -d
+```
