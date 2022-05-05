@@ -134,7 +134,7 @@ export class GithubController {
 
       if (!user) {
         throw new Error(
-          "Your slack user doesn't have a github user associated please run ´register <github user>´"
+          "Your slack user doesn't have a github user associated please run `register <github user>`"
         );
       }
 
