@@ -11,7 +11,7 @@ const app = new App({
   signingSecret: process.env.SLACK_SIGNING_SECRET,
   socketMode: true, // add this
   appToken: process.env.SLACK_APP_TOKEN, // add this
-  port: parseInt(process.env.PORT as string, 10) || 3000,
+  port: 3000,
 });
 
 new SlackActions(app).activate();
