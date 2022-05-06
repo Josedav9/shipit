@@ -46,8 +46,13 @@ npm run server:dev
 
 
 ## Docker
-To deploy this app run
+To deploy this app run to build all container
 
 ```bash
-docker compose up -d
+sh deploy.sh 
+```
+
+To re build just the app run 
+```bash
+sh deploy.sh app
 ```

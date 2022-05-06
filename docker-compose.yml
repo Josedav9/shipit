@@ -21,6 +21,14 @@ services:
       - 3001:3001
     networks:
       - shipit
+  proxy:
+    build:
+      context: ./proxy
+      dockerfile: ./Dockerfile
+    ports:
+      - 8080:80
+    networks:
+      - shipit
 
 volumes: 
   data:
