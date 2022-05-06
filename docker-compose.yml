@@ -10,6 +10,8 @@ services:
       - ${MONGODB_PORT}:27017
     volumes:
       - data:/var/lib/mongodb-bot/data
+    networks:
+      - shipit
   app:
     build:
       context: .
@@ -17,7 +19,11 @@ services:
     ports:
       - 3000:3000
       - 3001:3001
-    network_mode: host
+    networks:
+      - shipit
 
 volumes: 
   data:
+networks:
+  shipit:
+    driver: bridge
