@@ -18,6 +18,10 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get("/health", (req, res) => {
+  res.status(200).json({message: 'Im working'})
+});
+
 app.post("/", (req, res) => {
   console.log(req.body.challenge);
   res.json({

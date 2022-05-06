@@ -7,6 +7,12 @@ export const findUserBySlackId = (slackUserId: string) => {
   });
 };
 
+export const findUsersByGithubId = (githubUsers: string[] ) => {
+  return User.find<UserModel>({
+    githubUser: { $in: githubUsers },
+  });
+}
+
 export const createNewUser = (
   githubUser: string,
   slackUserId: string

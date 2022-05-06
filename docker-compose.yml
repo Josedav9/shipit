@@ -3,19 +3,35 @@ services:
   db:
     image: mongo
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGODB_DATABASE}
     ports:
-      - 2717:27017
+      - ${MONGODB_PORT}:27017
     volumes:
       - data:/var/lib/mongodb-bot/data
+    networks:
+      - shipit
   app:
     build:
       context: .
       dockerfile: ./Dockerfile
     ports:
-      - 3000:3000
-
+      - ${BOT_PORT}:3000
+      - ${EXPRESS_PORT}:3001
+    networks:
+      - shipit
+  proxy:
+    build:
+      context: ./proxy
+      dockerfile: ./Dockerfile
+    ports:
+      - 3000:80
+    networks:
+      - shipit
 
 volumes: 
   data:
+networks:
+  shipit:
+    driver: bridge
