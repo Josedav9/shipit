@@ -2,4 +2,4 @@ FROM nginx
 
 COPY ./default.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 8080:80
+EXPOSE 80:80
