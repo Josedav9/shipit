@@ -25,6 +25,10 @@ app.post("/", (req, res) => {
   });
 });
 
+app.post("/health", (req, res) => {
+  res.status(200)
+});
+
 app.post("/webhook", async (req, res, next) => {
   const data: PullRequestDTO = req.body.pull_request;
   const repository: PullRequestDTO['repository'] = req.body.repository;
