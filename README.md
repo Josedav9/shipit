@@ -1,4 +1,4 @@
-# Slack bot with github integration
+# Slack bot with github integration xD
 
 
 Slack bot with github integrations is a slack bot that allow organizations to handle deployments and validate functionality before deploy to prodution enviroments.
