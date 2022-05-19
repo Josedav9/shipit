@@ -1,0 +1,16 @@
+version: v1.0
+name: AWS-Deploy
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+blocks:
+  - name: Deploy to AWS
+    task:
+      secrets:
+        - name: AWS
+      jobs:
+        - name: Deployment
+          commands:
+            - checkout
+            - /bin/bash ~/semaphore_deploy.py
