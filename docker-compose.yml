@@ -9,7 +9,7 @@ services:
     ports:
       - ${MONGODB_PORT}:27017
     volumes:
-      - data:/var/lib/mongodb-bot/data
+      - data:/data/db
     networks:
       - shipit
   app:
