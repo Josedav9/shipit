@@ -18,15 +18,6 @@ services:
       dockerfile: ./Dockerfile
     ports:
       - ${BOT_PORT}:3000
-      - ${EXPRESS_PORT}:3001
-    networks:
-      - shipit
-  proxy:
-    build:
-      context: ./proxy
-      dockerfile: ./Dockerfile
-    ports:
-      - 3000:80
     networks:
       - shipit
 
