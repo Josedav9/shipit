@@ -7,10 +7,10 @@ const logger = require("pino")();
 config();
 
 const app = new App({
-  token: process.env.SLACK_BOT_TOKEN,
-  signingSecret: process.env.SLACK_SIGNING_SECRET,
-  appToken: process.env.SLACK_APP_TOKEN, // add this
-  port: 3000,
+  token: process.env.SLACK_BOT_TOKEN_DEV,
+  signingSecret: process.env.SLACK_SIGNING_SECRET_DEV,
+  appToken: process.env.SLACK_APP_TOKEN_DEV, // add this
+  port: process.env.BOT_PORT as any,
   customRoutes: [
     {
       path: '/health',
