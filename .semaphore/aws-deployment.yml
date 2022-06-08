@@ -3,14 +3,19 @@ name: AWS-Deploy
 agent:
   machine:
     type: e1-standard-2
-    os_image: ubuntu1804
+  containers:
+    - name: main
+      image: '171305397109.dkr.ecr.us-east-1.amazonaws.com/docker-images-python-semaphore-deployment:latest'
+  image_pull_secrets:
+    - name: aws-ecr
 blocks:
-  - name: Deploy to AWS
+  - name: Deploy to AWS using ECS
     task:
       secrets:
         - name: AWS
+        - name: shipit-service
       jobs:
         - name: Deployment
           commands:
             - checkout
-            - /bin/bash ~/semaphore_deploy.py
+            - python3 ~/semaphore_deploy.py
