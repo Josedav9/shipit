@@ -1,0 +1,25 @@
+version: v1.0
+name: shipit-service
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+
+blocks:
+  - name: Install dependencies
+    task:
+      jobs:
+        - name: Install dependencies
+          commands:
+            - checkout
+            - cache restore
+            - sem-version node 16.1.0
+            - npm install
+            - cache store
+      secrets:
+        - name: AWS
+promotions:
+  - name: AWS deploy
+    pipeline_file: aws-deployment.yml
+    auto_promote:
+      when: result = 'passed'

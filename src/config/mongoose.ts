@@ -25,9 +25,8 @@ export class MongooseBootstrap {
   }
 
   connect() {
-    return mongoose.connect(this.uri, {
-      auth: { username: this.user, password: this.password },
-      dbName: this.db,
-    });
+    return mongoose.connect(
+      `mongodb://${this.user}:${this.password}@${this.host}:${this.port}/${this.db}`
+    );
   }
 }
